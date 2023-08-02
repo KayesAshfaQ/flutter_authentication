@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -7,23 +5,25 @@ import '../components/my_button.dart';
 import '../components/my_textfield.dart';
 import '../components/square_tile.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegisterPageState extends State<RegisterPage> {
   // text editing controllers
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
-  // sign user in method
-  void signUserIn(context) async {
+  // sign user up method
+  void signUserUp(context) async {
     // get email and password from textfields
     String email = emailController.text;
     String password = passwordController.text;
+    String confirmPassword = confirmPasswordController.text;
 
     // validate email and password
     if (email.isEmpty || password.isEmpty) {
@@ -35,6 +35,9 @@ class _LoginPageState extends State<LoginPage> {
     } else if (password.length < 6) {
       showErrorMessage('Password must be at least 6 characters');
       return;
+    } else if (password != confirmPassword) {
+      showErrorMessage('Passwords do not match');
+      return;
     }
 
     //show loading circle
@@ -45,42 +48,24 @@ class _LoginPageState extends State<LoginPage> {
       },
     );
 
-    // try to sign user in
+    // try to create user account
     try {
-      final auth = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: password,
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text,
+        password: passwordController.text,
       );
 
       // hide loading circle
       Navigator.pop(context);
-
-      // show dialog as registration successful
-      if (auth.user != null) {
-        showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-                  content: Text('You have successfully Registered'),
-                  actions: [
-                    TextButton(
-                        onPressed: () {
-                          Navigator.pushReplacementNamed(context, '/login');
-                        },
-                        child: Text('Login Now'))
-                  ],
-                ));
-
-        //
-      }
     } on FirebaseAuthException catch (e) {
       // hide loading circle
       Navigator.pop(context);
       if (e.code == 'invalid-email') {
         showErrorMessage('The email address is not valid.');
-      } else if (e.code == 'user-not-found') {
-        showErrorMessage('No user found for that email.');
-      } else if (e.code == 'wrong-password') {
-        showErrorMessage('Wrong password provided for that user.');
+      } else if (e.code == 'weak-password') {
+        showErrorMessage('The password provided is too weak.');
+      } else if (e.code == 'email-already-in-use') {
+        showErrorMessage('The account already exists for that email.');
       } else {
         showErrorMessage(e.message.toString());
       }
@@ -111,7 +96,7 @@ class _LoginPageState extends State<LoginPage> {
 
                 // logo
                 const Icon(
-                  Icons.lock,
+                  Icons.lock_open,
                   size: 72,
                 ),
 
@@ -119,7 +104,7 @@ class _LoginPageState extends State<LoginPage> {
 
                 // welcome back, you've been missed!
                 Text(
-                  'Welcome back you\'ve been missed!',
+                  'Register to continue...',
                   style: TextStyle(
                     color: Colors.grey[700],
                     fontSize: 16,
@@ -146,26 +131,19 @@ class _LoginPageState extends State<LoginPage> {
 
                 const SizedBox(height: 8),
 
-                // forgot password?
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Text(
-                        'Forgot Password?',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
+                // confirm password textfield
+                MyTextField(
+                  controller: confirmPasswordController,
+                  hintText: 'Confirm Password',
+                  obscureText: true,
                 ),
 
                 const SizedBox(height: 24),
 
-                // sign in button
+                // sign up button
                 MyButton(
-                  label: 'Sign In',
-                  onTap: () => signUserIn(context),
+                  label: 'Sign Up',
+                  onTap: () => signUserUp(context),
                 ),
 
                 const SizedBox(height: 32),
@@ -221,15 +199,15 @@ class _LoginPageState extends State<LoginPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Not a member?',
+                      'Already have an account?',
                       style: TextStyle(color: Colors.grey[700]),
                     ),
                     const SizedBox(width: 4),
                     GestureDetector(
                       onTap: () =>
-                          Navigator.pushReplacementNamed(context, '/register'),
+                          Navigator.pushReplacementNamed(context, '/login'),
                       child: const Text(
-                        'Register now',
+                        'Login now',
                         style: TextStyle(
                           color: Colors.blue,
                           fontWeight: FontWeight.bold,
