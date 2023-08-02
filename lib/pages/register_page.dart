@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 import '../components/my_button.dart';
 import '../components/my_textfield.dart';
@@ -50,13 +51,32 @@ class _RegisterPageState extends State<RegisterPage> {
 
     // try to create user account
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      final credential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailController.text,
         password: passwordController.text,
       );
 
       // hide loading circle
       Navigator.pop(context);
+
+      // if user account is created
+      if (credential.user != null) {
+        Navigator.pushReplacementNamed(context, '/home');
+
+        // send email verification
+        // await credential.user?.sendEmailVerification();
+
+        // show toast message
+        Fluttertoast.showToast(
+            msg: "This is Center Short Toast",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.green,
+            textColor: Colors.white,
+            fontSize: 16.0);
+      }
     } on FirebaseAuthException catch (e) {
       // hide loading circle
       Navigator.pop(context);
@@ -113,10 +133,10 @@ class _RegisterPageState extends State<RegisterPage> {
 
                 const SizedBox(height: 24),
 
-                // username textfield
+                // email textfield
                 MyTextField(
                   controller: emailController,
-                  hintText: 'Username',
+                  hintText: 'Email',
                   obscureText: false,
                 ),
 

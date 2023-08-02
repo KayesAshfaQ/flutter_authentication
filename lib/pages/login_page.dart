@@ -1,7 +1,6 @@
-import 'dart:math';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_authentication/services/auth_service.dart';
 
 import '../components/my_button.dart';
 import '../components/my_textfield.dart';
@@ -57,20 +56,7 @@ class _LoginPageState extends State<LoginPage> {
 
       // show dialog as registration successful
       if (auth.user != null) {
-        showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-                  content: Text('You have successfully Registered'),
-                  actions: [
-                    TextButton(
-                        onPressed: () {
-                          Navigator.pushReplacementNamed(context, '/login');
-                        },
-                        child: Text('Login Now'))
-                  ],
-                ));
-
-        //
+        Navigator.pushReplacementNamed(context, '/home');
       }
     } on FirebaseAuthException catch (e) {
       // hide loading circle
@@ -131,7 +117,7 @@ class _LoginPageState extends State<LoginPage> {
                 // username textfield
                 MyTextField(
                   controller: emailController,
-                  hintText: 'Username',
+                  hintText: 'Email',
                   obscureText: false,
                 ),
 
@@ -201,13 +187,23 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 32),
 
                 // google + apple sign in buttons
-                const Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // google button
-                    SquareTile(imagePath: 'assets/images/google.png'),
+                    SquareTile(
+                      imagePath: 'assets/images/google.png',
+                      onTap: () async {
+                        final userCredential =
+                            await AuthService().signInWithGoogle();
 
-                    SizedBox(width: 16),
+                        if (userCredential != null) {
+                          Navigator.pushReplacementNamed(context, '/home');
+                        }
+                      },
+                    ),
+
+                    const SizedBox(width: 16),
 
                     // apple button
                     SquareTile(imagePath: 'assets/images/apple.png')
